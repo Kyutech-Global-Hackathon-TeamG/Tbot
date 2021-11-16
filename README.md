@@ -27,3 +27,9 @@ Functions:
   
     - Words segmentation
     - Part of speech
+
+  - Save conversation as csv
+
+    - Upload csv to dropbox
+    - Provide download link
+    - Option to delete all conversation
