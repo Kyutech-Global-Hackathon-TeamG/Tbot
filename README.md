@@ -23,10 +23,12 @@ Functions:
     
   
   
-  - Japanese sentence processing: nagisa =>https://github.com/taishi-i/nagisa
+  - Japanese sentence processing: nagisa => https://github.com/taishi-i/nagisa
   
     - Words segmentation
     - Part of speech
+
+  - Japanese to Romanji conversion => https://github.com/polm/cutlet
 
   - Save conversation as csv
 
