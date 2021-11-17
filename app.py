@@ -12,8 +12,7 @@ import webbrowser
 import dropbox
 import nagisa
 import cutlet
-from janome.tokenizer import Tokenizer
-t = Tokenizer()
+import datetime
 
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,TemplateSendMessage,ImageSendMessage, StickerSendMessage, AudioSendMessage
@@ -28,17 +27,20 @@ app = Flask(__name__)
 lineaccesstoken = '/+mz28LZ+4TcWao8D1SiEkEJfSatxM8rLwa7MqMl6yMyffOdaJtnqHqzemci3Ogip6tk8Ye6U7HXK01qCGgYBkzqWAsCzRoGbnSIy7ySiatAQfkrO39tELLdO+ixRiC9cLXMvOTftT1w3hPgDcoWOQdB04t89/1O/w1cDnyilFU='
 line_bot_api = LineBotApi(lineaccesstoken)
 
-
+dt = datetime.datetime.now()
 katsu = cutlet.Cutlet()
 ################### Dropbox ##################
 dropbox_access_token = "acFejDGvB7oAAAAAAAAAAeU29LoxJ8MEQg6bGRWWBR3cHo7vMBazvFdUVgK4f-XV"
 dropbox_path = "/Tbot/talk.csv"
+dropbox_path_dt = "/Tbot/talk_dt.csv"
 computer_path = r"talk.csv"
+computer_path_dt = r"talk_dt.csv"
 client = dropbox.Dropbox (dropbox_access_token)
 
 ################### CSV ######################
 
-headersCSV = ['Japanese','English translated']      
+headersCSV = ['Japanese','English']   
+headersCSV_dt = ['Japanese','English','Origin','Time']     
 #dict={'Japanese':'こんにちは','English translated':'Hello.'}
 
 
@@ -130,11 +132,11 @@ def event_handle(event):
         wordslength = len(words.words)
         for x in range(wordslength):
             if len(words.words[x]) == 1:
-                wordx = wordx + words.words[x] + "\t\t   "+ words.postags[x]+"\n"
+                wordx = wordx + words.words[x] + "\t\t   "+ translator.translate(words.postags[x], dest='en').text+"\n"   
             elif len(words.words[x]) == 2:
-                wordx = wordx + words.words[x] + "\t  "+ words.postags[x]+"\n"
+                wordx = wordx + words.words[x] + "\t  "+ translator.translate(words.postags[x], dest='en').text+"\n"
             elif len(words.words[x]) == 3:
-                wordx = wordx + words.words[x] + "\t"+ words.postags[x]+"\n"
+                wordx = wordx + words.words[x] + "\t"+ translator.translate(words.postags[x], dest='en').text+"\n"
         
         if msg == '/Download':
             client.files_delete(dropbox_path)
@@ -143,8 +145,16 @@ def event_handle(event):
             link_to_download= client.sharing_create_shared_link(dropbox_path)
             replyObj = TextSendMessage(text="Dropbox Link:  "+ link_to_download.url)
 
+        elif msg == '/Download+':
+            client.files_delete(dropbox_path_dt)
+            client.files_upload (open (computer_path_dt, "rb"). read (), dropbox_path_dt)
+            print ("upload: {}" .format (computer_path_dt))
+            link_to_download= client.sharing_create_shared_link(dropbox_path_dt)
+            replyObj = TextSendMessage(text="Dropbox Link:  "+ link_to_download.url)
+
+
         elif msg == '/Help':
-            helpmsg = "- Text in Japanese will be translated to English\n- Text in English will be translated to Japanese\n- Type '/Download' to download the conversation\n- Type '/Clear' to delete all conversation"
+            helpmsg = "- Text in Japanese will be translated to English\n- Text in English will be translated to Japanese\n- Type '/Download' to download the conversation\n- Type '/Download+' to download the conversation with sender name and timestamp\n- Type '/Clear' to delete all conversation"
             replyObj = TextSendMessage(text=helpmsg)
             
         elif msg == '/Clear':
@@ -153,6 +163,14 @@ def event_handle(event):
             talk.close()
             with open('talk.csv', 'w') as open_file:
                 dw = DictWriter(open_file, delimiter=',', fieldnames=headersCSV)
+                dw.writeheader()
+
+
+            talk = open("talk_dt.csv", "w")
+            talk.truncate()
+            talk.close()
+            with open('talk_dt.csv', 'w') as open_file:
+                dw = DictWriter(open_file, delimiter=',', fieldnames=headersCSV_dt)
                 dw.writeheader()
            
             replyObj = TextSendMessage(text='Cleared all conversation successfully!')
@@ -170,7 +188,7 @@ def event_handle(event):
             replyObj = TextSendMessage(text="Translation  🇯🇵 => 🇺🇸  \n\n"+profile.display_name+" said\n        '"+translation.text+"\nRomanji\n        "+katsu.romaji(msg)+"'\n\n"+wordx)
             #print(katsu.romaji(msg))
          
-            dict={'Japanese':msg,'English translated':translation.text}
+            dict={'Japanese':msg,'English':translation.text}
             with open('talk.csv', 'a', newline='') as talk:
 
                 dictwriter_object = DictWriter(talk, fieldnames=headersCSV)
@@ -179,7 +197,17 @@ def event_handle(event):
 
                 #f.write(dict)
 
+            dict_dt={'Japanese':msg,'English':translation.text,'Origin':profile.display_name,'Time':dt}
+            with open('talk_dt.csv', 'a', newline='') as talk:
+
+                dictwriter_object = DictWriter(talk, fieldnames=headersCSV_dt)
+                dictwriter_object.writerow(dict_dt)
+                talk.close()
+
+
             df = pd.read_csv('talk.csv')
+            print(df.to_string()) 
+            df = pd.read_csv('talk_dt.csv')
             print(df.to_string()) 
             
             
