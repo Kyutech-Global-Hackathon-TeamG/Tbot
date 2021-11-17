@@ -13,6 +13,8 @@ Functions:
     - Greet new member when joining the group
     
     - Farewell member when leaveing the group
+    
+    - Help dialog
  
   
   - Translate text : Googletrans => https://github.com/ssut/py-googletrans
