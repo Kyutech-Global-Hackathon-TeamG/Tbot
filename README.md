@@ -35,3 +35,6 @@ Functions:
     - Upload csv to dropbox
     - Provide download link
     - Option to delete all conversation
+    - Normal version and detailed verion containing sender and time
+
+
